@@ -1,4 +1,12 @@
 \documentclass{beamer}
+\newcommand{\x}{\mathbf{x}}
+\newcommand{\w}{\mathbf{w}}
+\newcommand{\W}{\mathbf{W}}
+\newcommand{\y}{\mathbf{y}}
+\newcommand{\X}{\mathbf{X}}
+\newcommand{\Y}{\mathbf{Y}}
+\newcommand{\fx}{\mathbf{f}}
+\newcommand{\fs}{\mbox{f}}
 \usepackage[cp1251]{inputenc}
 \usepackage[russian]{babel}
 \usepackage{amsmath,mathrsfs,mathtext}
@@ -23,33 +31,79 @@
 \end{frame}
 %-------------------------------------------------------
 \begin{frame}{Цель исследования}
-\begin{block}{Задача}
-Пара слов про сами рецепторы
+\begin{block}{Цель исследования}
+Решается задача предсказания биологической активности молекул протеинов (лиганд) с
+рецепторами. По признакам лиганда необходимо оценить вероятность связывания этой молекулы с одним или несколькими клеточными рецепторами и построить бинарный классификатор
 \end{block}
-В области нужно машинное обучение, не все методы уже рассмотрены.
+\begin{block}{Проблема}
+Экспертные знания в области биохимии и фармакологии дают основания пред-
+полагать, что факты связывания одних и тех же молекул с различными рецепторами не
+независимы.
+\end{block}
+\begin{block}{Задача}
+Необходимо построить модель, учитывающую схожесть рецепторов. Модель должна предсказывать вероятность взаимодействия.
+\end{block}
 \end{frame}
 %-------------------------------------------------------
 \begin{frame}{Проблема}
-Картинка с молекулами {\em жду}
+Картинка с молекулами
+{\em (жду)}
 \end{frame}
 %-------------------------------------------------------
 \begin{frame}{Литература}
+\begin{enumerate}
+	\item Olexandr Isayev Sherif Farag Stephen J. Capuzzi, Regina Politi and Alexander Tropsha. Qsar
+	modeling of tox21 challenge stress response and nuclear receptor signaling toxicity assays.
+	\item Geoff Holmes Eibe Frank Jesse Read, Bernhard Pfahringer. Classifier chains for multi-label
+	classification.
+	\item Eyke H.0 Krzysztof Dembczynski, Weiwei Cheng. Bayes optimal multilabel classification via
+	probabilistic classifier chains. 2010.
+\end{enumerate}
 \end{frame}
 %-------------------------------------------------------
 \begin{frame}{Постановка задачи}
-Максимум правдоподобия выборки
+Задана выборка $\mathfrak{D}=\{(\x_i,\y_i)\}=\mathfrak{L}\sqcup\mathfrak{T}$. $\x_i\in \mathbb{R}^n$. $\y_i\in \{0,1,\Box\}^l$, $\Box$~--- пропуск в данных.
+	
+$\X, \Y$~--- случайные величины, между классами есть зависимости.
+
+Модель классификации: функция $\fs\colon \W\times\X\times\Y\to [0,1]$, $$\fs(\w,\x,\y)=P(\Y=\y|\X=\x;\w)$$
+	
+	Функция потерь~--- логарифм правдоподобия
+	$$Q(\fs|\w, \mathcal{Z})=-\sum_{(\x,\y)\in\mathcal{Z}}\log \fs(\w,\x,\y)P(\X=\x)$$
+	
+	Требуется минимизировать $Q$:
+	$$\w^*=\underset{{\w\in\W}}{\arg\min}Q(\fs|\w,\mathfrak{L})$$
+	
+	Для выбора конкретной модели используется AUC.
 \end{frame}
 %-------------------------------------------------------
 \begin{frame}{Решение}
 Распишем вероятность, ...
+
+{\em Слайд появится после T, пока тут пусто}
 \end{frame}
 %-------------------------------------------------------
 \begin{frame}{Вычислительный эксперимент}
-Смотрим ROC-кривую, выбираем штрафы, смотрим AUC
+\begin{block}{Цель эксперимента}
+Сравнение различных моделей по критерию AUC для различных классов.
+\end{block}
+\end{frame}
+\begin{frame}{Вычислительный эксперимент}
+Показать характерные графики ROC-кривой для разных моделей и классов (несколько слайдов).
+
+Показать графики в зависимости от гиперпараметров
+\end{frame}
+\begin{frame}{Вычислительный эксперимент}
+{\bf Результаты эксперимента}
+Таблица модели $\times$ рецепторы, сравнивающая их по AUC.
 \end{frame}
 %-------------------------------------------------------
 \begin{frame}{Заключение}
-PCC лучше BR
+\begin{enumerate}
+	\item Предложена модель для предсказания взаимодействия, учитывающая зависимости между классами
+	\item Проведено сравнение модели с другими по критерию AUC
+	\item PCC лучше BR для классов a, b, c по критерию AUC.
+\end{enumerate}
 \end{frame}
 %-------------------------------------------------------
 \end{document} 
