@@ -1,6 +1,7 @@
 \documentclass[12pt,twoside]{article}
 \usepackage{jmlda}
 \usepackage{cancel}
+\usepackage{algorithmic}
 \newcommand{\x}{\mathbf{x}}
 \newcommand{\w}{\mathbf{w}}
 \newcommand{\W}{\mathbf{W}}
@@ -9,6 +10,7 @@
 \newcommand{\Y}{\mathbf{Y}}
 \newcommand{\fx}{\mathbf{f}}
 \newcommand{\fs}{\mbox{f}}
+
 %\NOREVIEWERNOTES
 \title
     [Предсказание биологической активности ядерных рецепторов] % Краткое название; не нужно, если полное название влезает в~колонтитул
@@ -101,22 +103,63 @@ $$Q(\fs|\w, \mathcal{Z})=-\sum_{(\x,\y)\in\mathcal{Z}}\log \fs(\w,\x,\y)P(\X=\x)
 Покажем, как получить из вероятности $P(\y|\x)$ вероятности классов, а также как построить бинарный классификатор, основываясь на различных функциях потерь (см. \cite{weiwei2010}).
 
 \begin{enumerate}
-\item Hamming Loss. Получаем $h_i(\x)=\sign(P(y_i=1|\x)-P(y_i=0|\x))$
+\item Hamming Loss. Получаем $h_i(\x)=\sign(P(y_i=1|\x)-\frac{1}{2})$
 \item Subset 0/1 Loss. Получаем $\y=\argmax_{y\in Y}P(\y|\x)$
 \item Rank Loss. Получаем $f_i(\x)=P(y_i=1|\x)$
 \end{enumerate}
 
-Описать, как решается проблема с пропусками (классификация уже имеющимися звеньями)
+Получим вероятность $P(y_i=1|\x)$ из известного распределения $P(\y|\x)$: $P(y_i=1|\x)=\sum\limits_{y\in \{0,1\}^l}[y_i=1]P(\y|\x)$. Таким образом, искомые вероятности выражаются через распределение $P(\y|\x)$.
 
-Описать алгоритм обучения и классификации
+Обозначим $(x)_{y}=\begin{cases}
+x, & y = 1\\
+1 - x & y = 0
+\end{cases}$.
 
-Описать, как получить $P(y_i=1|\x)$ из известного $P(\y|\x)$.
+Обозначим $g_i(y_1,...,y_{i-1},\x)=P(y_i=1|y_1,...,y_{i-1},\x)$
+
+Получаем выражение вероятности $P(\y|\x)$ через функции $g_i$: $P(\y|\x)=\prod\limits_{i=1}^lP(y_i|y_1,...,y_{i-1},\x)=\prod\limits_{i=1}^l(g_i(y_1,...,y_{i-1},\x))_{y_i}$
+
+Вероятности $P(y_i=1|y_1,...,y_{i-1},\x)=g_i(y_1,...,y_{i-1},\x)$ предсказываются при помощи логистической регрессии, т.е. $g_i(y_1,...,y_{i-1},\x)=\sigma$
+
+Получаем семейство моделей $P(\y|\x)=\prod\limits_{i=1}^l(\sigma(\w_i^T||y_1...y_{i-1}\x^T||^T+w^0_i))_{y_i}$, где $\sigma(x)=\frac{1}{1+e^{-x}}$.
+
+Описать, как решается проблема с пропусками при обучении и придумать нормальный алгоритм (классификация уже имеющимися звеньями)
 
 Описать, как производить разбиение
 
 Описать, как выбирать порог логистической регрессии $\frac{\lambda_+}{\lambda_-}$ по точке на ROC-кривой.
-
-Описать, как обрабатывать пропуски (и придумать нормальный алгоритм)
+\newpage
+\subsection{Алгоритмы}
+\begin{algorithm}[]
+	\caption{Обучение PCC для выборок без пропусков}
+	\label{PCCLearn}
+	\begin{algorithmic}[1]
+		\REQUIRE Обучающая выборка $\mathfrak{L}=\{(\x_i,\y_i)\}_{i\in L}$
+		\ENSURE Векторы $\w_i\in\mathbb{R}^{n+i-1},\,i\in\overline{1,l}$
+		
+		\STATE {$u_j\leftarrow$ $j$-й столбец матрицы $y_{ij}$, $j\in\overline{1,l}$}
+		\FOR {$i = 1, \dots, l$}
+		\STATE {$X^i\leftarrow ||X y_1 ... y_{i-1}||^\Box$. Эта матрица имеет строки $X^i_j$}
+		\STATE {$\w_i=\argmax{\prod\limits_{j\in L}}(\sigma(\w_i^TX^i_j))_{y_{ij}} $~--- обучение логистической регрессии}
+		\ENDFOR
+	\RET $\w_1,...,\w_l$
+	\end{algorithmic}
+\end{algorithm}
+\begin{algorithm}[]
+	\caption{Предсказание $\y\in\{0,1\}^l$ для объекта}
+	\label{PCCPredictSubset}
+	\begin{algorithmic}[1]
+		\REQUIRE Объект $\x\in \mathbb{R}^n$, векторы $\w_i$, пороги $w^0_i$, вектор $\y\in\{0,1\}^m$
+		\ENSURE Условная вероятность $P(\y|\x)\in[0,1]$
+		
+		\STATE {$P\leftarrow 1$}
+		\FOR {$i = 1, \dots, l$}
+		\STATE {$\x'\leftarrow ||\x^T y_1 ... y_{i-1}||^{\Box T}$}
+		\STATE {$P\leftarrow P \cdot \sigma'(\w_i^T\x'+w^0_i)$}
+		\ENDFOR
+	\RET P
+	\end{algorithmic}
+\end{algorithm}
 
 \section{Вычислительный эксперимент}
 
