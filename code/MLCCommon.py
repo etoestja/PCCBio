@@ -75,4 +75,3 @@ def showROCCurve(fpr, tpr, auc_mean, auc_std, filename):
     plt.title(r"AUC $= %s\,\pm\,%s$" % (auc_mean, auc_std), fontsize=15)
     plt.savefig(filename + ".eps", bbox_inches = 'tight')
     plt.show()
-    
