@@ -64,23 +64,3 @@ def plotDistribution():
     plt.tick_params(axis='both', which='major')
     plt.savefig("ModelData.eps", bbox_inches = 'tight')
     plt.show()
-
-def bestLoss(result, m):
-    # metric value
-    mmin = None
-    mmax = None
-    
-    #loss in metric value
-    lmin = None
-    lmax = None
-    
-    for loss in result:
-        metr = result[loss][m]
-        if mmax == None or metr > mmax:
-            mmax = metr
-            lmax = loss
-        if mmin == None or metr < mmin:
-            mmin = metr
-            lmin = loss
-    print lmin, mmin
-    print lmax, mmax

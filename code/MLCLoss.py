@@ -40,3 +40,27 @@ def middleLoss(v1, v2, t):
     r = HammingLossObjects(v1, v2)
     r1 = t[r]
     return np.sum(r1)
+
+best_is_min = {"H": True, "P": False, "R": False, "A": False, "S": True}
+
+def bestLoss(result, m):
+    # metric value
+    mmin = None
+    mmax = None
+
+    #loss in metric value
+    lmin = None
+    lmax = None
+
+    for loss in result:
+        metr = np.mean(result[loss][m])
+        if mmax == None or metr > mmax:
+            mmax = metr
+            lmax = loss
+        if mmin == None or metr < mmin:
+            mmin = metr
+            lmin = loss
+    if best_is_min[m[0]]:
+        print "min", m, lmin, mmin
+    else:
+        print "max", m, lmax, mmax
