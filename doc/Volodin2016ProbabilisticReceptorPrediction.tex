@@ -382,13 +382,72 @@ $$L(\y,\y')=q\left(\sum\limits_{i=1}^l[y_i\neq y'_i]\right),$$
 	\end{tabular}
 \end{table}
 
-Для определения эффективности данного метода вычисляются значения функционала AUC для каждого из разбиений $\mathfrak{D}=\mathfrak{L}\sqcup\mathfrak{T}$ на тестовую и контрольную выборку. Разбиения выполнены по методу k-fold, где $k=5$. Вычисляется среднее значение AUC, а также стандартное отклонение.
+\begin{table}[H]%\small
+	\caption{Значение AUC для различных рецепторов и моделей классификации}
+	\label{t:methodCmp}
+	\centering\medskip%\tabcolsep=2pt%\small
+	\begin{tabular}{lrr}
+		\headline
+		
+		Рецептор
+		
+		& Binary Relevance
+		& Random Forest \cite{qsar} \\
+		
+		\headline
+		
+		{\tt NR-AhR}
+		& $\mathbf{0.83} \pm 0.03$
+		& $\mathbf{0.93}$ \\
+		
+		{\tt NR-AR-LBD}
+		& $\mathbf{0.86} \pm 0.08$
+		& $\mathbf{0.88}$ \\
+		
+		{\tt NR-AR}
+		& $\mathbf{0.83} \pm 0.09$
+		& $\mathbf{0.83}$ \\
+		
+		{\tt SR-MMP}
+		& $\mathbf{0.87} \pm 0.03$
+		& $\mathbf{0.95}$ \\
+		
+		{\tt NR-ER}
+		& $\mathbf{0.78} \pm 0.04$
+		& $\mathbf{0.81}$ \\
+		
+		{\tt SR-HSE}
+		& $\mathbf{0.79} \pm 0.04$
+		& $\mathbf{0.86}$ \\
+		
+		{\tt SR-p53}
+		& $\mathbf{0.79} \pm 0.07$
+		& $\mathbf{0.88}$ \\
+		
+		{\tt NR-PPAR-gamma}
+		& $\mathbf{0.79} \pm 0.04$
+		& $\mathbf{0.86}$ \\
+		
+		{\tt SR-ARE}
+		& $\mathbf{0.78} \pm 0.02$
+		& $\mathbf{0.84}$ \\
+		
+		{\tt NR-Aromatase}
+		& $\mathbf{0.81} \pm 0.05$
+		& $\mathbf{0.84}$ \\
+		
+		{\tt SR-ATAD5}
+		& $\mathbf{0.81} \pm 0.06$
+		& $\mathbf{0.83}$ \\
+		
+		{\tt NR-ER-LBD}
+		& $\mathbf{0.80} \pm 0.07$
+		& $\mathbf{0.83}$ \\
+		\hline
+	\end{tabular}
+\end{table}
 
-На графиках (\ref{fg:BR1}, \ref{fg:BR2}) показаны ROC-кривые классов для одного из разбиений, а также значение функционала AUC.
-
-%['NR-AhR' 'NR-AR-LBD' 'NR-AR' 'SR-MMP' 'NR-ER' 'SR-HSE' 'SR-p53' 'NR-PPAR-gamma' 'SR-ARE' 'NR-Aromatase' 'SR-ATAD5' 'NR-ER-LBD']
-
-\begin{figure}[h]
+\begin{figure}[H]
 	\subfloat[Рецептор NR-AhR]{\includegraphics[width=0.5\textwidth]{class1}}
 	\subfloat[Рецептор NR-AR-LBD]{\includegraphics[width=0.5\textwidth]{class2}}\\
 	\subfloat[Рецептор NR-AR]{\includegraphics[width=0.5\textwidth]{class3}}
@@ -398,7 +457,7 @@ $$L(\y,\y')=q\left(\sum\limits_{i=1}^l[y_i\neq y'_i]\right),$$
 	\caption{ROC-кривая и значения функционала AUC для классов 1-6, метод Binary Relevance}
 	\label{fg:BR1}
 \end{figure}
-\begin{figure}[h]
+\begin{figure}[H]
 	\subfloat[Рецептор SR-p53]{\includegraphics[width=0.5\textwidth]{class7}}
 	\subfloat[Рецептор NR-PPAR-gamma]{\includegraphics[width=0.5\textwidth]{class8}}\\
 	\subfloat[Рецептор SR-ARE]{\includegraphics[width=0.5\textwidth]{class9}}
@@ -409,76 +468,44 @@ $$L(\y,\y')=q\left(\sum\limits_{i=1}^l[y_i\neq y'_i]\right),$$
 	\label{fg:BR2}
 \end{figure}
 
-В таблице \ref{t:methodCmp} приведено сравнение метода Binary Relevance с результатами из \cite{qsar}, для получения которых использовались те же данные и способ разбиения, что и в данной работе.
+На графиках (\ref{fg:BR1}, \ref{fg:BR2}) показаны ROC-кривые классов для одного из разбиений, построенные по предсказаниям Binary Relevance, а также значение функционала AUC. В таблице \ref{t:methodCmp} приведено сравнение метода Binary Relevance с результатами из \cite{qsar}, для получения которых использовались те же данные, что и в данной работе. Сравнение результатов показывает, что логистическая регрессия алгоритм уступает в качестве классификации методу Random Forest. Для некоторых рецепторов эта разница значительна.
 
+Для определения эффективности методов вычисляются значения метрик Hamming Loss, Subset Loss, Precision, Recall для каждого из разбиений $\mathfrak{D}=\mathfrak{L}\sqcup\mathfrak{T}$ на тестовую и контрольную выборку. Вычисляются средние значения и стандартные отклонения. Разбиения выполнены по методу Shuffle Split с размером тестовой выборки $0.1$ и количеством разбиений $5$ из-за разреженности данных. Используются функции потерь для PCC, аналогичные таковым для модельных данных. В эксперименте использованы только данные по рецепторам NR-AhR, NR-AR-LBD, NR-Aromatase. Использованы только объекты со всеми тремя известными ответами.
+
+%. Вычисляется среднее значение AUC, а также стандартное отклонение.
+
+%['NR-AhR' 'NR-AR-LBD' 'NR-AR' 'SR-MMP' 'NR-ER' 'SR-HSE' 'SR-p53' 'NR-PPAR-gamma' 'SR-ARE' 'NR-Aromatase' 'SR-ATAD5' 'NR-ER-LBD']
+
+Результаты сравнения PCC и BR представлены в таблице \ref{t:realData}. Как и для модельных данных, заметно существенное улучшения Subset Loss для PCC (S). Также имеется незначительное улучшение Hamming Loss (H) для класса 2 (NR-AR-LBD).
 \begin{table}[H]%\small
-\caption{Значение AUC для различных рецепторов и моделей классификации}
-\label{t:methodCmp}
-\centering\medskip%\tabcolsep=2pt%\small
-\begin{tabular}{lrr}
-\headline
-
-Рецептор
-
-& Binary Relevance
-& Random Forest \cite{qsar} \\
-
-\headline
-
-{\tt NR-AhR}
-& $\mathbf{0.83} \pm 0.03$
-& $\mathbf{0.93}$ \\
-
-{\tt NR-AR-LBD}
-& $\mathbf{0.86} \pm 0.08$
-& $\mathbf{0.88}$ \\
-
-{\tt NR-AR}
-& $\mathbf{0.83} \pm 0.09$
-& $\mathbf{0.83}$ \\
-
-{\tt SR-MMP}
-& $\mathbf{0.87} \pm 0.03$
-& $\mathbf{0.95}$ \\
-
-{\tt NR-ER}
-& $\mathbf{0.78} \pm 0.04$
-& $\mathbf{0.81}$ \\
-
-{\tt SR-HSE}
-& $\mathbf{0.79} \pm 0.04$
-& $\mathbf{0.86}$ \\
-
-{\tt SR-p53}
-& $\mathbf{0.79} \pm 0.07$
-& $\mathbf{0.88}$ \\
-
-{\tt NR-PPAR-gamma}
-& $\mathbf{0.79} \pm 0.04$
-& $\mathbf{0.86}$ \\
-
-{\tt SR-ARE}
-& $\mathbf{0.78} \pm 0.02$
-& $\mathbf{0.84}$ \\
-
-{\tt NR-Aromatase}
-& $\mathbf{0.81} \pm 0.05$
-& $\mathbf{0.84}$ \\
-
-{\tt SR-ATAD5}
-& $\mathbf{0.81} \pm 0.06$
-& $\mathbf{0.83}$ \\
-
-{\tt NR-ER-LBD}
-& $\mathbf{0.80} \pm 0.07$
-& $\mathbf{0.83}$ \\
-\hline
+	\caption{Сравнение алгоритмов на реальных данных. Рецепторы 1,2,3 = NR-AhR, NR-AR-LBD, NR-Aromatase}
+	\label{t:realData}
+	\centering\medskip%\tabcolsep=2pt%\small
+\begin{tabular}{lrrrr}
+	\headline
+	{Метрика} &             BR &           PCC (H) &          PCC (M) &           PCC (S) \\
+	\headline
+	AUC 1 &   0.58 $\pm$ 0.03 &    0.58 $\pm$ 0.03 &    0.57 $\pm$ 0.02 &    0.58 $\pm$ 0.02 \\
+	AUC 2 &   0.61 $\pm$ 0.06 &    0.61 $\pm$ 0.06 &    0.62 $\pm$ 0.06 &    0.61 $\pm$ 0.05 \\
+	AUC 3 &   0.55 $\pm$ 0.01 &    0.54 $\pm$ 0.01 &    0.53 $\pm$ 0.01 &    0.54 $\pm$ 0.01 \\
+	H     &   0.15 $\pm$ 0.01 &    0.17 $\pm$ 0.01 &    0.19 $\pm$ 0.02 &    0.17 $\pm$ 0.02 \\
+	H 1   &   0.21 $\pm$ 0.03 &    0.21 $\pm$ 0.03 &    0.24 $\pm$ 0.02 &    0.21 $\pm$ 0.03 \\
+	H 2   &  0.045 $\pm$ 0.01 &  0.041 $\pm$ 0.007 &  0.041 $\pm$ 0.008 &  0.041 $\pm$ 0.006 \\
+	H 3   &    0.2 $\pm$ 0.02 &    0.25 $\pm$ 0.01 &    0.29 $\pm$ 0.03 &    0.25 $\pm$ 0.03 \\
+	P 1   &    0.79 $\pm$ 0.1 &     0.79 $\pm$ 0.1 &     0.79 $\pm$ 0.1 &     0.82 $\pm$ 0.1 \\
+	P 2   &    0.91 $\pm$ 0.1 &     0.88 $\pm$ 0.1 &     0.91 $\pm$ 0.1 &     0.88 $\pm$ 0.1 \\
+	P 3   &   0.76 $\pm$ 0.07 &    0.82 $\pm$ 0.09 &    0.78 $\pm$ 0.09 &    0.82 $\pm$ 0.08 \\
+	R 1   &   0.17 $\pm$ 0.06 &    0.17 $\pm$ 0.06 &    0.15 $\pm$ 0.04 &    0.18 $\pm$ 0.05 \\
+	R 2   &    0.22 $\pm$ 0.1 &     0.23 $\pm$ 0.1 &     0.24 $\pm$ 0.1 &     0.23 $\pm$ 0.1 \\
+	R 3   &    0.1 $\pm$ 0.02 &   0.085 $\pm$ 0.02 &   0.071 $\pm$ 0.02 &   0.086 $\pm$ 0.02 \\
+	S     &   0.32 $\pm$ 0.02 &    0.34 $\pm$ 0.02 &    0.46 $\pm$ 0.03 &     0.3 $\pm$ 0.03 \\
+	\headline
 \end{tabular}
 \end{table}
 
-Сравнение результатов показывает, что простой алгоритм уступает в качестве классификации методу Random Forest. Для некоторых рецепторов эта разница значительна.
-
 \section{Заключение}
+
+В работе применен алгоритм Probabilistic Classifier Chains для решения задачи предсказания взаимодействия рецепторов и лигандов. Алгоритм сравнивается с базовым алгоритмом, не учитывающим зависимости между классами. Вычислительный эксперимент показал, что как для модельных, так и для реальных данных PCC позволяет существенно улучшить показатели Subset Loss, т.е. качество предсказания всего вектора. При использовании Hamming Loss результаты сходны с результатами независимого классификатора. Предложена функция потерь для алгоритма PCC, позволяющая незначительно улучшить показатели Hamming Loss для отдельных классов.
 
 \bibliographystyle{unsrt}
 \clearpage
