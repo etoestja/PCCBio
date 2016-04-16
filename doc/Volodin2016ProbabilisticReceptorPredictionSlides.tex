@@ -30,9 +30,9 @@
 \end{frame}
 %-------------------------------------------------------
 \begin{frame}{Цель исследования}
-Предсказание взаимодействия двух типов молекул: лиганд и рецепторов. Необходимо оценить вероятность связывания.
+Предсказание взаимодействия двух типов молекул: лиганд и рецепторов. Необходимо дать оценку связывания.
 \begin{block}{Проблема}
-События реакции лиганда с различными рецепторами не независимы.
+События реакции лиганда с различными рецепторами не независимы. Классификатор, не учитывающий их, имеет плохой результат.
 %В ответах содержатся пропуски, поэтому независимое рассмотрение рецепторов дает неудовлетворительное качество классификации.
 %События реакции лиганда с различными рецепторами не независимы.
 %Экспертные знания в области биохимии и фармакологии дают основания пред-
@@ -61,181 +61,174 @@
 \end{frame}
 %-------------------------------------------------------
 \begin{frame}{Постановка задачи}
-Задана выборка $\mathfrak{D}=\{(\x_i,\y_i)\}=\mathfrak{L}\sqcup\mathfrak{T}$. $\x_i\in \mathbb{R}^n$. $\y_i\in \{0,1,\Box\}^l$, $\Box$~--- пропуск в данных.
+Задана выборка $\mathfrak{D}=\{(\x_i,\y_i)\}=\mathfrak{L}\sqcup\mathfrak{T}$. $\x_i\in \mathbb{R}^n$. $\y_i\in \{0,1,\Box\}^l$ %, $\Box$~--- пропуск в данных.
 	
-$\X, \Y$~--- случайные величины, между классами есть зависимости.
+$\X, \Y$~--- случайные величины %, между классами есть зависимости.
+\begin{block}{Восстановление распределения}
+Модель классификации: функция $\fs=P(\Y=\y|\X=\x;\w)$
 
-Модель классификации: функция $\fs\colon \W\times\X\times\Y\to [0,1]$, $$\fs(\w,\x,\y)=P(\Y=\y|\X=\x;\w)$$
+Максимизируется правдоподобие выборки:
 	
-	Функция потерь~--- логарифм правдоподобия
-	$$Q(\fs|\w, \mathcal{Z})=-\sum_{(\x,\y)\in\mathcal{Z}}\log \fs(\w,\x,\y)P(\X=\x)$$
+	%Функция потерь~--- логарифм правдоподобия
+	%$$Q(\fs|\w, \mathcal{Z})=-\sum_{(\x,\y)\in\mathcal{Z}}\log %\fs(\w,\x,\y)P(\X=\x)$$
 	
-	Требуется минимизировать $Q$:
-	$$\w^*=\underset{{\w\in\W}}{\arg\min}Q(\fs|\w,\mathfrak{L})$$
+%	Требуется минимизировать $Q$:
+	$$\w^*=\underset{{\w\in\W}}{\arg\max}\ln P(\fs|\w,\mathfrak{L})$$
 	
-	Для оценки конкретной модели используется AUC.
+\end{block}
+\begin{block}{Бинарный классификатор}
+	\begin{enumerate}
+		\item Функция потерь $L(\y,\y')$
+		\item $h(x)=\underset{\y\in \Y}{\arg\min}\,\mathbb{E}_{\Y|\X=\x}L(\Y,\y)$
+	\end{enumerate}
+\end{block}
+
+Модели сравниваются по различным метрикам с использованием кросс-валидации.
 \end{frame}
 %-------------------------------------------------------
-\begin{frame}{Решение}
-%Распишем вероятность, ...
+\begin{frame}{Решение. Вид модели $\fs$}
+Probabilistic Classifier Chains
+\begin{enumerate}
+\item Выразим искомую величину $P(\y|\x)$: $$P(\y|\x)=P(y_1|\x)\prod_{i=2}^lP(y_i|y_1,...,y_{i-1}, \x)$$
 
-%{\em Слайд появится после T, пока тут пусто}
+\item Задача распадается на $n$ задач поиска $$P(y_1|\x),\,P(y_2|y_1,\x)...,\,P(y_l|y_1,...,y_{l-1},\x)$$
+
+\item Каждую оцениваем при помощи логистической регрессии.
+
+\item Признаки для $i$-й: $\x$, \bf{а также $y_1,...,y_{i-1}$}
+\end{enumerate}
+\end{frame}
+\begin{frame}{Решение. Бинарный классификатор}
+Байесовское решающее правило:
+$$h(x)=\underset{\y\in \Y}{\arg\min}\,\mathbb{E}_{\Y|\X=\x}L(\Y,\y)$$
+Все зависит от $L(\y,\y')$. Какая лучше?
+\begin{enumerate}
+\item Hamming Loss: $L(\y,\y')=\sum\limits_{i=1}^l[y_i\neq y'_i]$.\\ $h(x)$ не учитывает зависимости!
+\item Subset Loss: $L(\y,\y')=[\y\neq\y']$
+\item $L(\y,\y')=q(\sum\limits_{i=1}^l[y_i\neq y'_i])$
+\end{enumerate}
+
+Решения для разных существенно различны.
+\end{frame}
+\begin{frame}{Решение. Бинарный классификатор}
+Иллюстрация проблемы
+\begin{table}[t] %\small
+	\centering\medskip%\tabcolsep=2pt%\small
+	\begin{tabular}{lrrrr}
+		$y_1$ & $y_2$ & $y_3$ & $y_4$ & $P(\y)$\\
+		$0$ & $0$ & $0$ & $0$ & $0.30$\\
+		$0$ & $1$ & $1$ & $1$ & $0.17$\\
+		$1$ & $0$ & $1$ & $1$ & $0.18$\\
+		$1$ & $1$ & $0$ & $1$ & $0.17$\\
+		$1$ & $1$ & $1$ & $0$ & $0.18$\\
+	\end{tabular}
+\end{table}
+\begin{enumerate}
+\item Лучший по Subset Loss: $(0, 0, 0, 0)$
+\item Лучший по Hamming Loss: $(1, 1, 1, 1)$
+\end{enumerate}
+{\small Krzysztof Dembczynski, Multi-Label Classification: Label Dependence, Loss Minimization, and Reduction Algorithms, 2013 }
 \end{frame}
 %-------------------------------------------------------
 \begin{frame}{Вычислительный эксперимент}
 \begin{block}{Цель эксперимента}
 \begin{enumerate}
-	\item Сравнение различных моделей по критерию AUC для различных классов.
-	\item Выбор гиперпараметров исходя из внешних требований к решению задачи.
+	\item Сравнение бинарных классификаторов
+	\item Выбор гиперпараметров
+	\item Характеристики алгоритма
 \end{enumerate}
 \end{block}
 \begin{block}{Сравниваемые модели}
 \begin{enumerate}
-	\item Binary Relevance
+	\item Binary Relevance~--- без зависимостей
 	\item {\bf PCC}~--- предлагаемое решение
-	\item Random Forest
 \end{enumerate}
 \end{block}
 \end{frame}
-\begin{frame}{Вычислительный эксперимент}
-\begin{table}[t]%\small
-	\begin{tabular}{cc}
-	BR & PCC\\
-\includegraphics[width=0.45\textwidth]{class2} &
-\includegraphics[width=0.45\textwidth]{class2_pcc}\\
-\includegraphics[width=0.45\textwidth]{class3} &
-\includegraphics[width=0.45\textwidth]{class3_pcc}\\
-	\end{tabular}
-\end{table}
+\begin{frame}{Вычислительный эксперимент. Модельные данные}
+1 признак, $l=3$ класса. Плотность:
+\includegraphics[width=0.9\textwidth]{ModelData}
 \end{frame}
-
-\begin{frame}{Вычислительный эксперимент}
-	\begin{table}[t]%\small
-		\begin{tabular}{cc}
-			BR & PCC\\
-			\includegraphics[width=0.45\textwidth]{class8} &
-			\includegraphics[width=0.45\textwidth]{class8_pcc}\\
-			\includegraphics[width=0.45\textwidth]{class12} &
-			\includegraphics[width=0.45\textwidth]{class12_pcc}\\
-		\end{tabular}
-	\end{table}
-\end{frame}
-
-\begin{frame}{Вычислительный эксперимент}
-Зависимость от гиперпараметров\\
-\centering \includegraphics[width=0.9\textwidth]{hyper5}
-
-\end{frame}
-
-\begin{frame}{Вычислительный эксперимент}
-{\bf Результаты эксперимента}
-\begin{table}[t]%\small
+\begin{frame}{Вычислительный эксперимент. Модельные данные}
+\begin{table}[t]\small
 	\centering\medskip%\tabcolsep=2pt%\small
-	\begin{tabular}{lrrr}
+	\begin{tabular}{lrrrr}
 %		\hline
-		Рецептор
-		
-		& Binary Relevance
-		& {\bf PCC}
-		& Random Forest\\
-%		\hline
-		
-% 0
-		{\tt NR-AhR}
-		& $\mathbf{0.83} \pm 0.03$
-		& $\mathbf{0.83}$
-		& $\mathbf{0.93}$
-		\\
-
-% 1		
-		{\tt NR-AR-LBD}
-		& $\mathbf{0.86} \pm 0.08$
-		& $\mathbf{0.90}$
-		& $\mathbf{0.88}$
-		\\
-
-% 2		
-		{\tt NR-AR}
-		& $\mathbf{0.83} \pm 0.09$
-		& $\mathbf{0.84}$
-		& $\mathbf{0.83}$
-\\
-	
-% 3	
-		{\tt SR-MMP}
-		& $\mathbf{0.87} \pm 0.03$
-		& $\mathbf{0.87}$
-		& $\mathbf{0.95}$
-		\\
-
-% 4	
-		{\tt NR-ER}
-		& $\mathbf{0.78} \pm 0.04$
-		& $\mathbf{0.78}$
-		& $\mathbf{0.81}$
-		\\
-
-% 5	
-		{\tt SR-HSE}
-		& $\mathbf{0.79} \pm 0.04$
-		& $\mathbf{0.78}$
-		& $\mathbf{0.86}$
-		\\
-
-% 6	
-		{\tt SR-p53}
-		& $\mathbf{0.79} \pm 0.07$
-		& $\mathbf{0.80}$
-		& $\mathbf{0.88}$
-		\\
-
-% 7	
-		{\tt NR-PPAR-gamma}
-		& $\mathbf{0.79} \pm 0.04$
-		& $\mathbf{0.81}$
-		& $\mathbf{0.86}$
-\\
-
-% 8	
-		{\tt SR-ARE}
-		& $\mathbf{0.78} \pm 0.02$
-		& $\mathbf{0.78}$
-		& $\mathbf{0.84}$
-\\
-
-% 9	
-		{\tt NR-Aromatase}
-		& $\mathbf{0.81} \pm 0.05$
-		& $\mathbf{0.82}$
-		& $\mathbf{0.84}$
-\\
-
-% 10	
-		{\tt SR-ATAD5}
-		& $\mathbf{0.81} \pm 0.06$
-		& $\mathbf{0.80}$
-		& $\mathbf{0.83}$
-\\
-
-% 11	
-		{\tt NR-ER-LBD}
-		& $\mathbf{0.80} \pm 0.07$
-		& $\mathbf{0.82}$
-		& $\mathbf{0.83}$
-\\
-%		\hline
+		Метрика &             BR &         PCC (H) &         PCC (M) &         PCC (S) \\
+		AUC 1 &   0.69 $\pm$ 0.03 &  0.69 $\pm$ 0.03 &  0.69 $\pm$ 0.02 &  0.69 $\pm$ 0.05 \\
+		AUC 2 &   0.55 $\pm$ 0.04 &  0.55 $\pm$ 0.04 &  0.56 $\pm$ 0.03 &  0.51 $\pm$ 0.04 \\
+		AUC 3 &   0.65 $\pm$ 0.04 &  0.66 $\pm$ 0.02 &  0.64 $\pm$ 0.04 &  0.64 $\pm$ 0.04 \\
+		Hamming     &  0.37 $\pm$ 0.009 &  0.36 $\pm$ 0.02 &  0.36 $\pm$ 0.02 &  0.38 $\pm$ 0.04 \\
+		Hamming 1   &   0.31 $\pm$ 0.03 &  0.31 $\pm$ 0.03 &  0.31 $\pm$ 0.02 &  0.31 $\pm$ 0.05 \\
+		Hamming 2   &   0.45 $\pm$ 0.04 &  0.45 $\pm$ 0.04 &  0.45 $\pm$ 0.03 &  0.49 $\pm$ 0.05 \\
+		Hamming 3   &   0.34 $\pm$ 0.03 &   0.3 $\pm$ 0.03 &  0.31 $\pm$ 0.04 &  0.34 $\pm$ 0.03 \\
+		Precision 1   &    0.7 $\pm$ 0.06 &   0.7 $\pm$ 0.06 &  0.73 $\pm$ 0.05 &  0.64 $\pm$ 0.05 \\
+		Precision 2   &   0.55 $\pm$ 0.04 &  0.51 $\pm$ 0.01 &  0.47 $\pm$ 0.04 &  0.46 $\pm$ 0.07 \\
+		Precision 3   &    0.7 $\pm$ 0.06 &  0.56 $\pm$ 0.05 &    0.5 $\pm$ 0.1 &  0.66 $\pm$ 0.05 \\
+		Recall 1   &   0.68 $\pm$ 0.04 &  0.68 $\pm$ 0.04 &  0.68 $\pm$ 0.03 &  0.71 $\pm$ 0.05 \\
+		Recall 2   &    0.52 $\pm$ 0.1 &   0.53 $\pm$ 0.1 &  0.54 $\pm$ 0.09 &  0.48 $\pm$ 0.05 \\
+		Recall 3   &    0.48 $\pm$ 0.1 &  0.53 $\pm$ 0.06 &  0.52 $\pm$ 0.07 &  0.49 $\pm$ 0.09 \\
+		\bf{Subset}     &   0.78 $\pm$ 0.03 &  0.77 $\pm$ 0.05 &  0.77 $\pm$ 0.05 &  0.62 $\pm$ 0.06 \\
+	%	\hline
+	\end{tabular}
+\end{table}
+Есть улучшение только по Subset Loss.
+\end{frame}
+\begin{frame}{Вычислительный эксперимент. Реальные данные}
+Взаимодействие лиганд и рецепторов. Признаки сгенерированы программой биохимической симуляции, ответы~--- результаты экспериментов.
+\begin{enumerate}
+	\item 165 признаков, 8000 объектов
+	\item 12 классов (рецепторов), используется 3.
+	\item Высокая мультиколлинеарность
+\end{enumerate}
+В ответах имеется большое количество пропусков.
+\end{frame}
+\begin{frame}{Вычислительный эксперимент. Реальные данные}
+ 1,2,3 = NR-AhR, NR-AR-LBD, NR-Aromatase\\
+ Небольшое улучшение по Subset Loss
+\begin{table}[t]\footnotesize
+	\centering\medskip%\tabcolsep=2pt%\small
+	\begin{tabular}{lrrrr}
+		{Метрика} &             BR &           PCC (H) &          PCC (M) &           PCC (S) \\
+		AUC 1 &   0.58 $\pm$ 0.03 &    0.58 $\pm$ 0.03 &    0.57 $\pm$ 0.02 &    0.58 $\pm$ 0.02 \\
+		AUC 2 &   0.61 $\pm$ 0.06 &    0.61 $\pm$ 0.06 &    0.62 $\pm$ 0.06 &    0.61 $\pm$ 0.05 \\
+		AUC 3 &   0.55 $\pm$ 0.01 &    0.54 $\pm$ 0.01 &    0.53 $\pm$ 0.01 &    0.54 $\pm$ 0.01 \\
+		Hamming     &   0.15 $\pm$ 0.01 &    0.17 $\pm$ 0.01 &    0.19 $\pm$ 0.02 &    0.17 $\pm$ 0.02 \\
+		H 1   &   0.21 $\pm$ 0.03 &    0.21 $\pm$ 0.03 &    0.24 $\pm$ 0.02 &    0.21 $\pm$ 0.03 \\
+		H 2   &  0.045 $\pm$ 0.01 &  0.041 $\pm$ 0.007 &  0.041 $\pm$ 0.008 &  0.041 $\pm$ 0.006 \\
+		H 3   &    0.2 $\pm$ 0.02 &    0.25 $\pm$ 0.01 &    0.29 $\pm$ 0.03 &    0.25 $\pm$ 0.03 \\
+		Precision 1   &    0.79 $\pm$ 0.1 &     0.79 $\pm$ 0.1 &     0.79 $\pm$ 0.1 &     0.82 $\pm$ 0.1 \\
+		Precision 2   &    0.91 $\pm$ 0.1 &     0.88 $\pm$ 0.1 &     0.91 $\pm$ 0.1 &     0.88 $\pm$ 0.1 \\
+		Precision 3   &   0.76 $\pm$ 0.07 &    0.82 $\pm$ 0.09 &    0.78 $\pm$ 0.09 &    0.82 $\pm$ 0.08 \\
+		Recall 1   &   0.17 $\pm$ 0.06 &    0.17 $\pm$ 0.06 &    0.15 $\pm$ 0.04 &    0.18 $\pm$ 0.05 \\
+		Recall 2   &    0.22 $\pm$ 0.1 &     0.23 $\pm$ 0.1 &     0.24 $\pm$ 0.1 &     0.23 $\pm$ 0.1 \\
+		Recall 3   &    0.1 $\pm$ 0.02 &   0.085 $\pm$ 0.02 &   0.071 $\pm$ 0.02 &   0.086 $\pm$ 0.02 \\
+		\bf{Subset}     &   0.32 $\pm$ 0.02 &    0.34 $\pm$ 0.02 &    0.46 $\pm$ 0.03 &     0.3 $\pm$ 0.03 \\
 	\end{tabular}
 \end{table}
 \end{frame}
-
-%-------------------------------------------------------
+\begin{frame}{Вычислительный эксперимент. Размер выборки}
+Модельные данные.
+\includegraphics[width=0.9\textwidth]{ModelDataTrainSize}\\
+150 объектов достаточно.
+\end{frame}
 \begin{frame}{Заключение}
+\begin{block}{Результаты}
 \begin{enumerate}
 	\item Предложена модель для предсказания взаимодействия, учитывающая зависимости между классами
-	\item Проведено сравнение модели с другими по критерию AUC
-	\item Базовая модель BR имеет худшие показатели AUC, чем Random Forest
-	\item PCC лучше BR для большинства классов по критерию AUC при верных значениях гиперпараметров
+	\item Проведено сравнение модели с базовой
+	\item PCC лучше BR по метрике Subset Loss
+	\item Нет улучшений по отдельным классам
 \end{enumerate}
+\end{block}
+\begin{block}{Планы на будущее}
+	\begin{enumerate}
+		\item Улучшение показателей по классам
+		\item Выбор правильного алгоритма
+		\item Вычисление для всей выборки
+	\end{enumerate}	
+\end{block}
+
 \end{frame}
 %-------------------------------------------------------
 \end{document} 
