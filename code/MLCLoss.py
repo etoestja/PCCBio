@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.metrics import zero_one_loss
+from sklearn.metrics import precision_score, recall_score
 
 def subsetLoss(v1, v2):
     v1, v2 = np.array(v1), np.array(v2)
@@ -17,6 +18,13 @@ def subsetLossN(v1, v2):
 def HammingLoss(v1, v2):
     v1, v2 = np.array(v1), np.array(v2)
     return np.sum(v1 != v2)
+
+def FMeasureInverse(v1, v2):
+    v1, v2 = np.array(v1), np.array(v2)
+    precision = precision_score(v1, v2)
+    recall = recall_score(v1, v2)
+    res = 2. * precision * recall / (precision + recall)
+    return(1 - res)
 
 def HammingLossN(v1, v2):
     v1, v2 = np.array(v1), np.array(v2)
@@ -40,6 +48,27 @@ def middleLoss(v1, v2, t):
     r = HammingLossObjects(v1, v2)
     r1 = t[r]
     return np.sum(r1)
+
+def FBetaLossClasses(v1, v2, beta = 1):
+    v1, v2 = np.array(v1), np.array(v2)
+    b = beta ** 2.
+    P = precision_score(v1, v2)
+    R = recall_score(v1, v2)
+    z = (b * P + R)
+    if z == 0:
+        return np.nan
+    r = (1. + b) * P * R / z
+    return 1 - r
+
+def FBetaLoss(A, B, beta = 1):
+    A, B = np.array(A), np.array(B)
+    if len(A.shape) == 2:
+        arr = []
+        for i in range(A.shape[0]):
+            arr.append(FBetaLossClasses(A[i], B[i], beta))
+        return np.nanmean(arr)
+    else:
+        return FBetaLossClasses(A, B, beta)
 
 best_is_min = {"H": True, "P": False, "R": False, "A": False, "S": True}
 

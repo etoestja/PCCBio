@@ -1,0 +1,6 @@
+*.eps
+*.png
+*.svg
+*.pyc
+.ipynb_checkpoints
+*.csv

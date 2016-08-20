@@ -1,23 +1,30 @@
 import numpy as np
-def processFold(XTrain, YTrain, XTest, YTest, estimator, metrics):
+def processFold(XTrain, YTrain, XTest, YTest, estimator, metrics, do_train):
     estimator.fit(XTrain, YTrain)
-    Yr = estimator.predict(XTest)
+    if do_train:
+        Yrtrain = estimator.predict(XTrain)
+    if XTest.size > 0:
+        Yr = estimator.predict(XTest)
     result = {}
     for m in metrics:
-        result[m] = metrics[m](Yr, YTest)
+        if do_train:
+            result[m + ' train'] = metrics[m](Yrtrain, YTrain)
+        if XTest.size > 0:
+            result[m + ' test'] = metrics[m](Yr, YTest)
         #print m, result[m]
         
     return(result)
-def cross_val_score_multiple_metrics(estimator, metrics, cv, X, Y):
+def cross_val_score_multiple_metrics(estimator, metrics, cv, X, Y, do_train = False):
     result = {}
     
     for m in metrics:
-        result[m] = []
+        result[m + ' train'] = []
+        result[m + ' test'] = []
     
     for ITrain, ITest in cv:
         XTrain, YTrain = X[ITrain], Y[ITrain]
         XTest, YTest = X[ITest], Y[ITest]
-        rfold = processFold(XTrain, YTrain, XTest, YTest, estimator, metrics)
+        rfold = processFold(XTrain, YTrain, XTest, YTest, estimator, metrics, do_train)
         for m in rfold:
             result[m].append(rfold[m])
     return result
