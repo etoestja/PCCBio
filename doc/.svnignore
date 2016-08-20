@@ -1,0 +1,10 @@
+*.bbl
+*.blg
+*.log
+*.aux
+*.nav
+*.out
+*.synctex.gz
+*eps-converted-to*
+*.toc
+*.snm
