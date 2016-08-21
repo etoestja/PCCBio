@@ -39,11 +39,11 @@ class EPCC:
         res = None
         for i in range(self.n_estimators):
             r = self.C[i].predict(X, loss = loss)
-            print r
+        #    print r
             if type(res) == type(None):
                 res = r
             else:
                 res += r
-        print res
+        #print res
         res /= self.n_estimators
         return(res)

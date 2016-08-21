@@ -44,7 +44,7 @@ class PCC:
     def initialize(self, X, Y):
         self.m = Y.shape[1]
         
-        if self.permutation == None:
+        if type(self.permutation) == type(None):
             self.permutation = np.arange(0, self.m)
             
         self.inverse_permutation = np.argsort(self.permutation)

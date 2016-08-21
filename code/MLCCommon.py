@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, roc_auc_score
 
 def getB(n):
     if n == 0:
@@ -14,7 +15,7 @@ def getB(n):
         for a in res0:
             res.append([1] + a)
         return(res)
-def plotROCCurve(fpr, tpr, text, filename):
+def plotROCCurve(f_t, text, filename):
     """
      Plot a ROC curve from fpr, tpr
     """
@@ -26,7 +27,12 @@ def plotROCCurve(fpr, tpr, text, filename):
 #          'font.family' : 'lmodern',
        'text.latex.unicode': True}
     plt.rcParams.update(params) 
-    plt.plot(fpr, tpr, label = None)
+    i = 1
+    for fpr, tpr, auc in f_t:
+        print auc
+        label = str(i) + (' AUC = %.2g' % auc)
+        plt.plot(fpr, tpr, label = label)
+        i += 1
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -34,6 +40,7 @@ def plotROCCurve(fpr, tpr, text, filename):
     plt.ylabel('TPR', fontsize=15)
     plt.tick_params(axis='both', which='major')
     plt.title(str(text), fontsize=15)
+    plt.legend()
     if filename != None:
         plt.savefig(filename + ".eps", bbox_inches = 'tight')
     plt.show()
@@ -41,6 +48,13 @@ def getShowROC(classifier, Xc, Yc):
         Ys = classifier.decision_function(Xc)
         fpr, tpr, _ = roc_curve(Yc, Ys)
         plotROCCurve(fpr, tpr, "ROC", None)
+def plotROC(y_real = None, y_predicted = None):
+    r = []
+    for y in y_predicted:
+        fpr, tpr, _ = roc_curve(y_real, y)
+        auc = roc_auc_score(y_real, y)
+        r.append((fpr, tpr, auc))
+    plotROCCurve(r, "ROC", None)
 def getXY(classToTrain, X, Y, badValue = 999):
     """
     Get objects and answers for class classToTrain
