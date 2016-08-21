@@ -28,23 +28,36 @@ class PCC:
     # one-dimensional estimator
     estimator = None
     
+    # rearrangement of labels
+    permutation = None
+    inverse_permutation = None
+    
     # constructor
-    def __init__(self, badValue = 999, loss = hamming_loss, estimator = None):
+    def __init__(self, badValue = 999, loss = hamming_loss, estimator = None, permutation = None):
         self.badValue = badValue
         self.loss = loss
         self.estimator = estimator
-        if estimator == None:
-            estimator = LR()
+        self.permutation = permutation
         return None
     
     # init arrays
     def initialize(self, X, Y):
-        self.X = np.copy(X)
-        self.Y = np.copy(Y)
         self.m = Y.shape[1]
+        
+        if self.permutation == None:
+            self.permutation = np.arange(0, self.m)
+            
+        self.inverse_permutation = np.argsort(self.permutation)
+        
+        self.X = np.copy(X)
+        self.Y = np.copy(Y[:, self.permutation])
+            
         self.Xc = [None] * self.m
         self.Yc = [None] * self.m
         self.C = [None] * self.m
+        
+    def inversePermute(self, v):
+        return v[self.inverse_permutation]
         
     # fitOne for all labels
     def fit(self, X, Y):
@@ -84,22 +97,32 @@ class PCC:
     
     # time: O(2^{2m})
     def predictObject(self, x):
-        smin = None
-        res = None
-        for v in getB(self.m):
-            s = 0
-            for v1 in getB(self.m):
-                s += self.probabilityItem(x, v1) * self.loss(v1, v)
-            if smin == None or smin >= s:
-                smin = s
-                res = v
-        return(res)
+        if self.loss == "Hamming":
+            res = self.predictHammingLoss(x)
+        elif self.loss == "Subset":
+            res = self.predictSubsetLoss(x)
+        elif self.loss == "Rank":
+            res = self.predictMarginals(x)
+        else:
+            smin = None
+            res = None
+            for v in getB(self.m):
+                s = 0
+                for v1 in getB(self.m):
+                    s += self.probabilityItem(x, v1) * self.loss(v1, v)
+                if smin == None or smin >= s:
+                    smin = s
+                    res = v
+        return(np.array(self.inversePermute(np.array(res))).astype(np.ndarray))
     
-    # time: O(2^{2m} * |X|)
+    # time: O(2^{2m} * |X|) in general loss case
     # warning: this method uses Bayes optimal decisions
     # for arbitrary loss, which is slow
     # use predict<Metric> for faster prediction
-    def predict(self, X):
+    # or set self.loss to a string variable (see predictObject)
+    def predict(self, X, loss = None):
+        if not loss == None:
+            self.loss = loss
         X = np.array(X)
         if len(X.shape) == 1:
             return(self.predictObject(X))
@@ -112,6 +135,7 @@ class PCC:
             print("Wrong X shape " + str(X.shape))
             
     # time: O(2^m)
+    # warning: uses internal label order!
     def predictMarginal(self, x, i, v0 = []):
         # reached required label
         x1 = np.concatenate((np.array(x), np.array(v0)))
@@ -130,6 +154,7 @@ class PCC:
         
     # time: O(2^m)
     # 1 + 2 + ... + 2^m
+    # warning: uses internal label order!
     def predictMarginals(self, x):
         res = [0] * self.m
         for i in range(self.m):
@@ -137,6 +162,7 @@ class PCC:
         return(np.array(res))
     
     # time: O(2^m)
+    # warning: uses internal label order!
     def predictSubsetLoss(self, x):
         # mode of the distribution
         vmax = None
@@ -149,6 +175,7 @@ class PCC:
         return vmax
     
     # time: O(2^m)
+    # warning: uses internal label order!
     def predictHammingLoss(self, x):
         return self.predictMarginals(x) >= 0.5
     
@@ -157,6 +184,7 @@ class PCC:
         return("PCC X %d x %d Y %d x %d m %d loss = %s" % (self.X.shape[0], self.X.shape[1], self.Y.shape[0], self.Y.shape[1], self.m, self.loss))
     
     # print P(y|x) for given x and all possible y
+    # warning: uses internal label order!
     def printDistribution(self, x):
         for v in getB(self.m):
             print "v = " + str(v) + " p = " + str(self.probabilityItem(x, v))
